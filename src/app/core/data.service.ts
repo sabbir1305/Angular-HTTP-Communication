@@ -60,7 +60,7 @@ export class DataService {
     });
   }
 
-  deleeBook(bookID:number):Observable<void>{
+  deleteBook(bookID:number):Observable<void>{
     return this.http.delete<void>(`/api/books/${bookID}`);
   }
 
