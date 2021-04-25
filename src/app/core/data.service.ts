@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
-import { HttpClient, HttpHeaders } from '@angular/common/http';
-import { Observable } from 'rxjs';
-
+import { HttpClient, HttpErrorResponse, HttpHeaders } from '@angular/common/http';
+import { Observable, throwError } from 'rxjs';
+import {catchError} from 'rxjs/operators';
 import { allBooks, allReaders } from 'app/data';
 import { Reader } from "app/models/reader";
 import { Book } from "app/models/book";
@@ -19,8 +19,18 @@ export class DataService {
     this.mostPopularBook = popularBook;
   }
 
-  getAllReaders():Observable<Reader[]> {
-    return this.http.get<Reader[]>(`/api/readers`);
+  getAllReaders():Observable<Reader[] | BookTrackerError> {
+    return this.http.get<Reader[]>(`/api/readers`).pipe(
+      catchError(err=>this.handleHttpError(err))
+    );
+  }
+
+  private handleHttpError(error:HttpErrorResponse):Observable<BookTrackerError>{
+    let dataError = new BookTrackerError();
+    dataError.errorNumber=100;
+    dataError.message=error.statusText;
+    dataError.friendlyMessage='An error occurred retriving data.';
+    return throwError(dataError);
   }
 
   getReaderById(id: number):Observable<Reader> {
@@ -53,8 +63,10 @@ deleteReader(readerID:number):Observable<void>{
   return this.http.delete<void>(`/api/readers/${readerID}`);
 }
 
-  getAllBooks():Observable<Book[]> {
-    return this.http.get<Book[]>('/api/books');
+  getAllBooks():Observable<Book[] | BookTrackerError> {
+    return this.http.get<Book[]>('/api/books').pipe(
+      catchError(err=>this.handleHttpError(err))
+    );;
   }
 
   getBookById(id: number):Observable<Book> {
